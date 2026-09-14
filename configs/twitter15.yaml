@@ -1,0 +1,70 @@
+dataset:
+  name: twitter15
+  processed_dir: data/processed/twitter15
+  split_dir: data/processed/twitter15/splits
+  split_type: stratified_random
+  num_splits: 5
+
+model:
+  bert_name: bert-base-uncased
+  max_seq_len: 128
+  bert_hidden: 768
+  content_hidden: 256
+  freq_bins: 65
+  temporal_layers: 2
+  temporal_heads: 4
+  temporal_hidden: 256
+  hypergraph_layers: 2
+  hypergraph_hidden: 128
+  propagation_hidden: 256
+  fusion_hidden: 256
+  dropout: 0.1
+
+temporal:
+  window_seconds: 600
+  early_window_seconds: 300
+  min_cascade_events: 1     # Twitter15/16 releases don't guarantee >=5 events/cascade
+  reply_thread_max_depth: 5
+  community_resolution: 1.0
+  sync_threshold_seconds: 60
+  use_future_repost_count: false
+
+attacks:
+  content:
+    model: gpt-4o-2024-08-06  # gpt-4-0613 (the paper's original choice) was retired by OpenAI; see README
+    temperature: 0.7
+    top_p: 0.9
+    max_tokens: 200
+    num_candidates: 5
+    entail_thresh: 0.85
+    contra_thresh: 0.15
+    nli_model: microsoft/deberta-large-mnli
+    generalization_models: [gpt-4-0613, llama-3-70b, mistral-large]
+  propagation:
+    kappa_values: [0.10, 0.20, 0.30, 0.50]
+    kappa_default: 0.10
+    decoy_ratio: 0.20
+    gamma_depth: 0.5
+    gamma_centrality: 0.3
+    gamma_activity: 0.2
+    temporal_window_seconds: 600
+    community_resolution: 1.0
+
+training:
+  optimizer: adamw
+  weight_decay: 1.0e-5
+  lr_bert: 2.0e-5
+  lr_head: 5.0e-4
+  batch_size: 32
+  max_epochs: 50
+  early_stopping_patience: 7
+  early_stopping_metric: macro_f1
+  grad_clip_norm: 1.0
+  lambda_robust: 1.0
+  lambda_view: 0.5
+  seeds: [0, 1, 2, 3, 4]
+
+evaluation:
+  primary_metric: macro_f1
+  metrics: [macro_f1, accuracy, precision, recall, weighted_f1, mcc]
+  observation_horizons_minutes: [5, 10, 20, 30, 45, 60, 1440]

@@ -1,0 +1,34 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Raw and processed data are excluded for two independent reasons, not just size:
+# (1) PHEME/Twitter15/Twitter16 redistribution is restricted by Twitter's ToS and the
+#     datasets' own licenses -- committing them here would violate those terms.
+# (2) They're fully regenerable from the preprocessing scripts + your own copy of the
+#     raw archives, so there's nothing lost by excluding them.
+data/raw/*/
+!data/raw/*/.gitkeep
+data/processed/*/
+!data/processed/*/.gitkeep
+
+# Model checkpoints are large binaries (BERT-based models run ~400MB+ each; with 5
+# splits x 5 seeds x ~10 models this is tens of GB) and don't belong in a plain git
+# repo. If you want to publish specific trained weights, use Git LFS explicitly (see
+# .gitattributes) or host them externally (Zenodo/HF Hub) and link from the README --
+# don't just remove this line and commit them wholesale.
+checkpoints/
+*.pt
+*.ckpt
+
+# Generated content-attack text is derived from the (ToS-restricted) source tweets and
+# costs real API money to regenerate -- exclude the cache itself, but NOT results/,
+# since results/*.json are small, aggregated metrics with no such restriction and are
+# exactly what a reader would want to inspect/cite without rerunning the whole pipeline.
+data/processed/*/attack_cache/
+data/processed/*/attacks/
+
+.env
+.DS_Store

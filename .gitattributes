@@ -1,0 +1,6 @@
+# Not enabled by default (checkpoints are .gitignore'd entirely -- see .gitignore's
+# comment on why). If you later decide to publish specific trained weights via Git LFS
+# instead of an external host, first run `git lfs install`, then explicitly
+# `git add -f path/to/specific_checkpoint.pt` (the -f is required since *.pt is
+# .gitignore'd) and this rule will route it through LFS instead of storing it inline.
+*.pt filter=lfs diff=lfs merge=lfs -text

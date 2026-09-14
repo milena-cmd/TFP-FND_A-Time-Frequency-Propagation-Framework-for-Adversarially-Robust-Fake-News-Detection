@@ -1,0 +1,76 @@
+name: sanity-check
+
+# Deliberately NOT a full test suite -- there's no public data fixture to train/eval
+# against in CI. This just catches the class of bug that has repeatedly shown up during
+# development: syntax errors, broken imports, and constructor-level bugs in model
+# variants (wrong arg names, shape mismatches) -- checked here with real torch/
+# transformers installed, so it's a stronger check than a syntax-only linter.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  sanity-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Byte-compile everything (syntax check)
+        run: find . -name "*.py" -not -path "./.venv/*" | xargs -n1 python -m py_compile
+
+      - name: Import every module
+        run: |
+          python - << 'PYEOF'
+          import importlib, pkgutil, sys
+          import src
+
+          failures = []
+          for pkg_name in ("preprocessing", "data", "models", "attacks", "training", "utils"):
+              pkg = importlib.import_module(f"src.{pkg_name}")
+              for _, modname, _ in pkgutil.iter_modules(pkg.__path__, prefix=f"src.{pkg_name}."):
+                  try:
+                      importlib.import_module(modname)
+                      print(f"OK   {modname}")
+                  except Exception as exc:
+                      print(f"FAIL {modname}: {type(exc).__name__}: {exc}")
+                      failures.append(modname)
+          if failures:
+              print(f"\n{len(failures)} module(s) failed to import: {failures}")
+              sys.exit(1)
+          PYEOF
+
+      - name: Construct every model variant (CPU, no data required)
+        run: |
+          python - << 'PYEOF'
+          import sys
+          from src.models.baselines import build_model
+          from src.models.tfp_fnd import TFPFNDConfig
+
+          names = [
+              "tfp_fnd", "tfp_fnd_wo_robust", "bert_base", "bert_dft", "bert_temporal",
+              "bert_bigcn", "bert_hgsl", "tfp_fnd_wo_frequency", "tfp_fnd_wo_semantic",
+              "tfp_fnd_wo_temporal", "tfp_fnd_wo_hypergraph", "tfp_fnd_wo_adaptive_fusion",
+              "tfp_fnd_pairwise_propagation", "bigcn", "hgsl", "leht",
+          ]
+          cfg = TFPFNDConfig()
+          failures = []
+          for name in names:
+              try:
+                  build_model(name, cfg, user_vocab_size=1000)
+                  print(f"OK   {name}")
+              except Exception as exc:
+                  print(f"FAIL {name}: {type(exc).__name__}: {exc}")
+                  failures.append(name)
+          if failures:
+              print(f"\n{len(failures)} model(s) failed to construct: {failures}")
+              sys.exit(1)
+          PYEOF
