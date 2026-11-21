@@ -30,6 +30,10 @@ def build_model(name: str, base_config: TFPFNDConfig, user_vocab_size: int, num_
     if name == "tfp_fnd":
         return TFPFND(base_config, user_vocab_size, num_classes)
 
+    if name == "tfp_fnd_clean_only":
+        # same architecture, trained on clean instances only (see src/training/train.py).
+        return TFPFND(base_config, user_vocab_size, num_classes)
+
     if name == "tfp_fnd_wo_robust":
         # identical architecture; lambda_robust=lambda_view=0 is set in the training
         # config/CLI, not here -- this name exists so scripts can select it explicitly.
@@ -44,17 +48,35 @@ def build_model(name: str, base_config: TFPFNDConfig, user_vocab_size: int, num_
         cfg = _clone(base_config, use_temporal_view=False, use_propagation_view=False)
         return TFPFND(cfg, user_vocab_size, num_classes)
 
+    if name == "erfd":
+        # Fourier-domain (frequency-only) content encoder, no diffusion information.
+        cfg = _clone(base_config, use_semantic_branch=False, use_temporal_view=False,
+                     use_propagation_view=False)
+        return TFPFND(cfg, user_vocab_size, num_classes)
+
+    # Concatenation-fusion baselines.
     if name == "bert_temporal":
-        cfg = _clone(base_config, use_frequency_branch=False, use_propagation_view=False)
+        cfg = _clone(base_config, use_frequency_branch=False, use_propagation_view=False,
+                     use_adaptive_fusion=False)
         return TFPFND(cfg, user_vocab_size, num_classes)
 
     if name == "bert_bigcn":
         cfg = _clone(base_config, use_frequency_branch=False, use_temporal_view=False,
+                     use_adaptive_fusion=False,
                      enabled_relations=["reply_thread"])  # closest single-relation analogue to a cascade graph
         return TFPFND(cfg, user_vocab_size, num_classes)
 
     if name == "bert_hgsl":
-        cfg = _clone(base_config, use_frequency_branch=False, use_temporal_view=False)
+        cfg = _clone(base_config, use_frequency_branch=False, use_temporal_view=False,
+                     use_adaptive_fusion=False)
+        return TFPFND(cfg, user_vocab_size, num_classes)
+
+    if name == "bert_dft_temporal":
+        cfg = _clone(base_config, use_propagation_view=False, use_adaptive_fusion=False)
+        return TFPFND(cfg, user_vocab_size, num_classes)
+
+    if name == "bert_dft_hypergraph":
+        cfg = _clone(base_config, use_temporal_view=False, use_adaptive_fusion=False)
         return TFPFND(cfg, user_vocab_size, num_classes)
 
     # --- architectural ablations, Table "ablation_arch" ---

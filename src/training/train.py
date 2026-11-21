@@ -86,7 +86,7 @@ def run(config_path: Path, split_idx: int, model_name: str, seed: int,
     # with a fresh one if training is non-deterministic across environments).
     default_kappa_for_tag = cfg["attacks"]["propagation"]["kappa_default"]
     tag_for_check = result_tag or f"{attack_family}_k{kappa if kappa is not None else default_kappa_for_tag}"
-    is_default_attack_config_for_check = (attack_family == "composite" and
+    is_default_attack_config_for_check = (result_tag is None and attack_family == "composite" and
                                            (kappa is None or kappa == default_kappa_for_tag))
     results_dir_for_check = Path("results") / cfg["dataset"]["name"]
     fname_for_check = f"{model_name}_split{split_idx}_seed{seed}.json" if is_default_attack_config_for_check \
@@ -131,21 +131,27 @@ def run(config_path: Path, split_idx: int, model_name: str, seed: int,
         fusion_hidden=cfg["model"]["fusion_hidden"], dropout=cfg["model"]["dropout"],
         use_future_repost_count=cfg["temporal"]["use_future_repost_count"],
     )
+    for key, value in cfg["model"].get("overrides", {}).get(model_name, {}).items():
+        setattr(model_cfg, key, value)
     model = build_model(model_name, model_cfg, historical_ctx.vocab_size).to(device)
     optimizer = build_optimizer(model, cfg)
 
     lambda_robust = lambda_robust_override if lambda_robust_override is not None else cfg["training"]["lambda_robust"]
     lambda_view = lambda_view_override if lambda_view_override is not None else cfg["training"]["lambda_view"]
-    if model_name == "tfp_fnd_wo_robust":
+    if model_name in ("tfp_fnd_wo_robust", "tfp_fnd_clean_only"):
         lambda_robust, lambda_view = 0.0, 0.0
 
     best_val_f1, patience_left = -1.0, cfg["training"]["early_stopping_patience"]
     default_kappa = cfg["attacks"]["propagation"]["kappa_default"]
     tag = result_tag or f"{attack_family}_k{kappa if kappa is not None else default_kappa}"
-    is_default_attack_config = (attack_family == "composite" and (kappa is None or kappa == default_kappa))
+    is_default_attack_config = (result_tag is None and attack_family == "composite" and
+                                (kappa is None or kappa == default_kappa))
     ckpt_subdir = f"split{split_idx}_seed{seed}" if is_default_attack_config else f"split{split_idx}_seed{seed}_{tag}"
     ckpt_dir = Path("checkpoints") / cfg["dataset"]["name"] / model_name / ckpt_subdir
     ckpt_dir.mkdir(parents=True, exist_ok=True)
+
+    clean_only = model_name == "tfp_fnd_clean_only"
+    train_conditions = ("clean",) if clean_only else ("clean", "content", "propagation", "joint")
 
     for epoch in range(cfg["training"]["max_epochs"]):
         model.train()
@@ -155,13 +161,19 @@ def run(config_path: Path, split_idx: int, model_name: str, seed: int,
             optimizer.zero_grad()
             outputs_by_condition = {
                 cond: model(batch["conditions"][cond], historical_ctx, tau_seconds=float("inf"), device=device)
-                for cond in ("clean", "content", "propagation", "joint")
+                for cond in train_conditions
             }
-            losses = total_loss(
-                outputs_by_condition, batch["label"].to(device),
-                batch["has_content_attack"].to(device), batch["has_propagation_attack"].to(device),
-                lambda_robust, lambda_view,
-            )
+            if clean_only:
+                l_cls = torch.nn.functional.cross_entropy(
+                    outputs_by_condition["clean"]["logits"], batch["label"].to(device))
+                zero = torch.zeros((), device=device)
+                losses = {"total": l_cls, "cls": l_cls, "robust": zero, "view": zero}
+            else:
+                losses = total_loss(
+                    outputs_by_condition, batch["label"].to(device),
+                    batch["has_content_attack"].to(device), batch["has_propagation_attack"].to(device),
+                    lambda_robust, lambda_view,
+                )
             losses["total"].backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), cfg["training"]["grad_clip_norm"])
             optimizer.step()

@@ -3,9 +3,7 @@
 Implements Section "Adversarial Content Transformation":
   - 5 transformation families: paraphrasing, syntactic restructuring, lexical
     substitution, sensational rewriting, neutral rewriting.
-  - Candidates generated with an LLM (default gpt-4o-2024-08-06 as of this codebase's
-    last update -- see the "Model availability" note in README.md; adjust if this too
-    has since been retired, temperature 0.7, top_p 0.9,
+  - Candidates generated with GPT-4 (gpt-4-0613, temperature 0.7, top_p 0.9,
     max_tokens 200), 5 candidates per source text.
   - Each candidate is filtered with a bidirectional NLI check (DeBERTa-large-mnli):
     keep only if entailment > entail_thresh AND contradiction < contra_thresh in BOTH
@@ -149,9 +147,8 @@ def _check_model_available(model: str) -> None:
     identically with a 404, and without this check that's only discovered after
     burning through the whole retry-and-warn loop for every instance/family/candidate.
 
-    This matters especially for dated snapshots like "gpt-4-0613": OpenAI periodically
-    retires old dated model snapshots, so a model name that worked when this paper's
-    methodology was written is not guaranteed to still exist later.
+    Dated model snapshots are retired by the provider from time to time, so the model
+    name is checked once before any generation call is made.
     """
     from openai import NotFoundError, OpenAI
     client = OpenAI()
@@ -175,9 +172,7 @@ def _check_model_available(model: str) -> None:
         raise EnvironmentError(
             f"Model '{model}' is not available to this API key (likely deprecated/"
             f"retired, or not enabled for this account/org). Pass --model with a "
-            f"currently available model instead.{suggestion} Note: substituting a "
-            f"different model than the paper's stated '{model}' should be documented "
-            f"in the methodology/reproducibility section. Original error: {exc}"
+            f"currently available model instead.{suggestion} Original error: {exc}"
         ) from exc
 
 
@@ -254,7 +249,7 @@ def run(processed_dir: Path, model: str, temperature: float, top_p: float,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--processed_dir", type=Path, required=True)
-    parser.add_argument("--model", default="gpt-4o-2024-08-06")
+    parser.add_argument("--model", default="gpt-4-0613")
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--top_p", type=float, default=0.9)
     parser.add_argument("--max_tokens", type=int, default=200)

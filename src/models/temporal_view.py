@@ -1,19 +1,15 @@
 """Temporal diffusion view, Section "Temporal Diffusion Representation".
 
-Builds a per-event feature (user embedding, normalized elapsed time delta_t,
-propagation depth, and -- unless disabled via `use_future_repost_count: false` in
-config, matching the paper's strict causal setting -- a "subsequent reposts observed
-in the full prefix" feature), processes the sequence with causally-masked
-self-attention, and combines the attention-pooled sequence with four aggregate
-descriptors (propagation rate, early-activity concentration, max depth, temporal
-dispersion) into H_temp.
+Builds a per-event feature (user embedding, normalized elapsed time delta_t and
+propagation depth), processes the sequence with causally-masked self-attention, and
+combines the attention-pooled sequence with four aggregate descriptors (propagation
+rate, early-activity concentration, max depth, temporal dispersion) into H_temp.
 
-IMPORTANT causal-mask note (matches the paper's own clarification): the causal mask
-constrains what one event's *attention* can see (nothing after its own timestamp), but
-the "subsequent repost count" feature is intentionally computed from the *entire*
-observed prefix, so it may reflect events later than the one it's attached to. Setting
-`use_future_repost_count=False` removes this feature entirely, which is the setting
-actually used for all reported experiments in the paper.
+Causality: the causal mask constrains what one event's attention can see (nothing
+after its own timestamp), and all features are computed from the interactions
+observed before the prediction deadline only. The optional "subsequent repost count"
+feature requires information from later events and is disabled
+(`use_future_repost_count: false`), which is the setting used in all experiments.
 """
 from typing import Dict, List
 

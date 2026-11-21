@@ -1,21 +1,22 @@
-# CITATION.cff -- see https://citation-file-format.github.io/
-# TODO: fill in real author name(s), and the paper's actual details once accepted/published.
-# Until then this is a placeholder so the repo has *a* citation file rather than none.
 cff-version: 1.2.0
 message: "If you use this code, please cite the associated paper."
 title: "TFP-FND: A Time-Frequency-Propagation Framework for Adversarially Robust Fake News Detection"
 type: software
 authors:
-  - family-names: "TODO"
-    given-names: "TODO"
-    affiliation: "TODO"
-repository-code: "TODO: fill in your GitHub URL once created, e.g. https://github.com/<user>/tfp-fnd"
+  - family-names: "Aissaoui"
+    given-names: "Yamina"
+    affiliation: "Teacher Education College of Setif, Setif, Algeria"
+  - family-names: "Berkani"
+    given-names: "Lamia"
+    affiliation: "University of Science and Technology Houari Boumediene, Algiers, Algeria"
 preferred-citation:
   type: article
   title: "TFP-FND: A Time-Frequency-Propagation Framework for Adversarially Robust Fake News Detection"
   authors:
-    - family-names: "TODO"
-      given-names: "TODO"
-  journal: "TODO: Elsevier journal name once accepted"
+    - family-names: "Aissaoui"
+      given-names: "Yamina"
+    - family-names: "Berkani"
+      given-names: "Lamia"
+  journal: "Online Social Networks and Media"
   year: 2026
-  status: "in preparation"
+  status: submitted

@@ -19,6 +19,9 @@ model:
   propagation_hidden: 256
   fusion_hidden: 256
   dropout: 0.1
+  overrides:                # per-method settings (Table of selected hyperparameters)
+    bigcn: {dropout: 0.2}
+    hgsl: {dropout: 0.2}
 
 temporal:
   window_seconds: 600
@@ -31,7 +34,7 @@ temporal:
 
 attacks:
   content:
-    model: gpt-4o-2024-08-06  # gpt-4-0613 (the paper's original choice) was retired by OpenAI; see README
+    model: gpt-4-0613
     temperature: 0.7
     top_p: 0.9
     max_tokens: 200
@@ -39,7 +42,6 @@ attacks:
     entail_thresh: 0.85
     contra_thresh: 0.15
     nli_model: microsoft/deberta-large-mnli
-    generalization_models: [gpt-4-0613, llama-3-70b, mistral-large]
   propagation:
     kappa_values: [0.10, 0.20, 0.30, 0.50]
     kappa_default: 0.10

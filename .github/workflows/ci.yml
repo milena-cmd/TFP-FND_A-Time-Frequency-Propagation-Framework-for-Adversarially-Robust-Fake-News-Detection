@@ -59,7 +59,8 @@ jobs:
               "tfp_fnd", "tfp_fnd_wo_robust", "bert_base", "bert_dft", "bert_temporal",
               "bert_bigcn", "bert_hgsl", "tfp_fnd_wo_frequency", "tfp_fnd_wo_semantic",
               "tfp_fnd_wo_temporal", "tfp_fnd_wo_hypergraph", "tfp_fnd_wo_adaptive_fusion",
-              "tfp_fnd_pairwise_propagation", "bigcn", "hgsl", "leht",
+              "tfp_fnd_pairwise_propagation", "bigcn", "hgsl", "leht", "erfd",
+              "bert_dft_temporal", "bert_dft_hypergraph", "tfp_fnd_clean_only",
           ]
           cfg = TFPFNDConfig()
           failures = []

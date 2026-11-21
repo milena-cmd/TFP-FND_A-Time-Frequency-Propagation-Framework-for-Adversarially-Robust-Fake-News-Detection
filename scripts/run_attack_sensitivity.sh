@@ -6,7 +6,7 @@ set -euo pipefail
 PROCESSED_DIR=${1:-data/processed/pheme}
 SPLIT_DIR="$PROCESSED_DIR/splits"
 CONFIG=${2:-configs/pheme.yaml}
-KAPPAS=(0.05 0.10 0.20 0.30 0.50)
+KAPPAS=(0.10 0.20 0.30 0.50)
 
 for kappa in "${KAPPAS[@]}"; do
   python -m src.attacks.propagation_attack --processed_dir "$PROCESSED_DIR" --split_dir "$SPLIT_DIR" \

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # RQ1 / Table "main_results": all baselines x 5 PHEME event-disjoint splits x 5 seeds.
+# bert_dft_temporal and bert_dft_hypergraph are the concatenation-fusion ablation baselines.
 set -euo pipefail
 CONFIG=${1:-configs/pheme.yaml}
-MODELS=(bert_base bert_dft bert_temporal bert_bigcn bert_hgsl bigcn hgsl leht tfp_fnd_wo_robust tfp_fnd)
+MODELS=(bert_base bert_dft erfd bert_temporal bert_bigcn bert_hgsl bigcn hgsl leht bert_dft_temporal bert_dft_hypergraph tfp_fnd_wo_robust tfp_fnd)
 SEEDS=(0 1 2 3 4)
 
 for split in 1 2 3 4 5; do

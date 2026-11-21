@@ -14,13 +14,15 @@ data/raw/*/
 data/processed/*/
 !data/processed/*/.gitkeep
 
-# Model checkpoints are large binaries (BERT-based models run ~400MB+ each; with 5
-# splits x 5 seeds x ~10 models this is tens of GB) and don't belong in a plain git
-# repo. If you want to publish specific trained weights, use Git LFS explicitly (see
-# .gitattributes) or host them externally (Zenodo/HF Hub) and link from the README --
-# don't just remove this line and commit them wholesale.
-checkpoints/
-*.pt
+# Model checkpoints are large binaries. The supplied checkpoint is intended to be
+# published with Git LFS or as a GitHub Release asset, not as an ordinary Git blob.
+# Other locally generated checkpoints remain ignored.
+checkpoints/*
+!checkpoints/
+!checkpoints/pheme/
+!checkpoints/pheme/tfp_fnd/
+!checkpoints/pheme/tfp_fnd/split1_seed0/
+!checkpoints/pheme/tfp_fnd/split1_seed0/best.pt
 *.ckpt
 
 # Generated content-attack text is derived from the (ToS-restricted) source tweets and
